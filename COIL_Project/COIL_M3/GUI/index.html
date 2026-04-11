@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COIL Robot Command & Control</title>
+    <link rel="stylesheet" href="/GUI/style.css">
+</head>
+<body>
+<div class="app">
+
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-row">
+                <div class="logo-mark">◎</div>
+                <div>
+                    <div class="logo">COIL C&amp;C</div>
+                    <div class="subtitle">CSCN72050 — Remote Robotic Command and Control</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="status-badge">
+                <span class="dot online" id="statusDot"></span>
+                <span id="statusText">Server Online</span>
+            </div>
+            <div class="status-chip" id="networkChip">Target not verified yet</div>
+        </div>
+    </header>
+
+    <main class="main">
+
+        <div class="col-left">
+
+            <section class="card quick-start">
+                <div class="card-title">Quick Start</div>
+                <ol class="quick-steps">
+                    <li>Select a configuration.</li>
+                    <li>Choose target, protocol, IP, and port.</li>
+                    <li>Click <b>Apply Connection</b>.</li>
+                    <li>Send commands and read response, telemetry, and log.</li>
+                </ol>
+            </section>
+
+            <section class="card" id="configCard">
+                <div class="card-title">Configuration</div>
+
+                <div class="config-tabs">
+                    <button class="config-tab active" data-config="1" onclick="setConfig(1)">
+                        <span class="tab-num">1</span>
+                        <span class="tab-label">Simulator</span>
+                    </button>
+                    <button class="config-tab" data-config="2" onclick="setConfig(2)">
+                        <span class="tab-num">2</span>
+                        <span class="tab-label">Robot Direct</span>
+                    </button>
+                    <button class="config-tab" data-config="3" onclick="setConfig(3)">
+                        <span class="tab-num">3</span>
+                        <span class="tab-label">Routing</span>
+                    </button>
+                </div>
+
+                <div class="config-desc" id="configDesc">
+                    Test against the simulator. Browser talks to your server, then your server talks to the simulator.
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Target</label>
+                    <div class="preset-row" id="targetRow">
+                        <button class="preset-btn active" data-target="simulator" onclick="setTarget('simulator')">Simulator</button>
+                        <button class="preset-btn hidden" data-target="robot1" onclick="setTarget('robot1')">Robot 1</button>
+                        <button class="preset-btn hidden" data-target="robot2" onclick="setTarget('robot2')">Robot 2</button>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group field-group-sm">
+                        <label class="field-label">Protocol</label>
+                        <select class="field-input" id="protocolInput" onchange="onProtocolChange()">
+                            <option value="UDP">UDP</option>
+                            <option value="TCP">TCP</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">IP Address</label>
+                        <input class="field-input" type="text" id="ipInput" value="10.172.41.150" placeholder="e.g. 10.172.41.150">
+                    </div>
+                    <div class="field-group field-group-sm">
+                        <label class="field-label">Port</label>
+                        <input class="field-input" type="text" id="portInput" value="29500" placeholder="29500">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="connect()">Apply Connection</button>
+
+                <div id="routingPanel" class="routing-panel hidden">
+                    <div class="divider"></div>
+                    <div class="card-title">Routing Setup</div>
+                    <p class="hint">
+                        Use this when PC2 should forward commands to another COIL server on PC3.
+                    </p>
+
+                    <div class="routing-steps">
+                        <div class="routing-step">1. Enter the next server IP.</div>
+                        <div class="routing-step">2. Enter the next server port.</div>
+                        <div class="routing-step">3. Save routing, then apply connection.</div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label class="field-label">Next Hop IP</label>
+                            <input class="field-input" type="text" id="nextHopIP" placeholder="e.g. 192.168.1.50">
+                        </div>
+                        <div class="field-group field-group-sm">
+                            <label class="field-label">Port</label>
+                            <input class="field-input" type="text" id="nextHopPort" value="3540" placeholder="3540">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="saveRouting()">Save Routing</button>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-title">System Status</div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Target</div>
+                        <div class="status-value" id="stTarget">—</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">IP</div>
+                        <div class="status-value" id="stIP">—</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Port</div>
+                        <div class="status-value" id="stPort">—</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Protocol</div>
+                        <div class="status-value" id="stProtocol">—</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Config</div>
+                        <div class="status-value" id="stConfig">—</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Route Mode</div>
+                        <div class="status-value" id="stRoute">—</div>
+                    </div>
+                    <div class="status-item status-item-wide">
+                        <div class="status-label">Last Result</div>
+                        <div class="status-value status-small" id="stLast">—</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-centre">
+            <section class="card">
+                <div class="card-title">Control Centre</div>
+
+                <div class="drive-params">
+                    <div class="field-group">
+                        <label class="field-label">Duration (seconds)</label>
+                        <input class="field-input" type="text" id="duration" value="3" placeholder="3">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Power (80–100%)</label>
+                        <input class="field-input" type="text" id="power" value="80" placeholder="80">
+                    </div>
+                </div>
+
+                <div class="command-help">
+                    Use the controls below to send movement commands. Request Telemetry asks for housekeeping data.
+                </div>
+
+                <div class="dpad">
+                    <div class="dpad-row">
+                        <button class="dpad-btn" data-dir="forward" onclick="sendDrive('forward')" title="Drive Forward">
+                            <span>▲</span><small>Forward</small>
+                        </button>
+                    </div>
+                    <div class="dpad-row">
+                        <button class="dpad-btn" data-dir="left" onclick="sendDrive('left')" title="Turn Left">
+                            <span>◀</span><small>Left</small>
+                        </button>
+                        <div class="dpad-centre">MOVE</div>
+                        <button class="dpad-btn" data-dir="right" onclick="sendDrive('right')" title="Turn Right">
+                            <span>▶</span><small>Right</small>
+                        </button>
+                    </div>
+                    <div class="dpad-row">
+                        <button class="dpad-btn" data-dir="backward" onclick="sendDrive('backward')" title="Drive Backward">
+                            <span>▼</span><small>Backward</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn btn-warning" id="sleepBtn" onclick="sendSleep()">■ Sleep / Reset</button>
+                    <button class="btn btn-info" id="telemetryBtn" onclick="requestTelemetry()">↻ Request Telemetry</button>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-title">Last Command Response</div>
+                <div id="responsePanel" class="response-panel">
+                    <div class="response-empty">No command sent yet</div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-right">
+            <section class="card">
+    <div class="card-title">Robot Status</div>
+    <div id="telemetryPanel" class="telemetry-list">
+        <div class="telemetry-row">
+            <span class="telemetry-name">Target</span>
+            <span class="telemetry-value" id="tvTarget">--</span>
+        </div>
+        <div class="telemetry-row">
+            <span class="telemetry-name">Protocol</span>
+            <span class="telemetry-value" id="tvProtocol">--</span>
+        </div>
+        <div class="telemetry-row">
+            <span class="telemetry-name">ACK</span>
+            <span class="telemetry-value" id="tvAck">--</span>
+        </div>
+        <div class="telemetry-message" id="telemetryMessage">No telemetry/status received yet</div>
+    </div>
+</section>
+
+            <section class="card card-log">
+                <div class="card-title-row">
+                    <div class="card-title">Packet Log</div>
+                    <div class="log-actions">
+                        <button class="btn-tiny" onclick="downloadLog()">Download TXT</button>
+                        <button class="btn-tiny" onclick="clearLog()">Clear</button>
+                    </div>
+                </div>
+                <div id="logPanel" class="log-panel"></div>
+            </section>
+        </div>
+
+    </main>
+</div>
+
+<script src="/GUI/app.js"></script>
+</body>
+</html>

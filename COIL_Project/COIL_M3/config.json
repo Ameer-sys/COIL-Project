@@ -1,0 +1,34 @@
+{
+    "server_port": 3540,
+
+    "configuration": 1,
+
+    "robot1": {
+        "ip": "10.172.41.150",
+        "port": 29500,
+        "protocol": "UDP",
+        "label": "Robot 1"
+    },
+
+    "robot2": {
+        "ip": "10.172.41.151",
+        "port": 29500,
+        "protocol": "UDP",
+        "label": "Robot 2"
+    },
+
+    "simulator": {
+        "ip": "10.172.41.150",
+        "port": 29500,
+        "protocol": "UDP",
+        "label": "Simulator"
+    },
+
+    "active_target": "simulator",
+
+    "routing_table": {
+        "enabled": false,
+        "next_hop_ip": "",
+        "next_hop_port": 3540
+    }
+}
